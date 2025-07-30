@@ -1,16 +1,17 @@
-import { format, differenceInYears } from "date-fns";
+import { format, differenceInYears, differenceInDays } from "date-fns";
 import { ru } from "date-fns/locale";
 import { MapPin } from "lucide-react";
 import { MemorialPhoto } from "@/components/memorial-photo";
+import { Typography } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
 interface MemorialHeaderProps {
   fullName: string;
   birthDate: string;
   deathDate: string;
-  birthPlace: string;
-  deathPlace: string;
-  photoUrl: string;
+  birthPlace?: string;
+  deathPlace?: string;
+  photoUrl?: string;
   className?: string;
 }
 
@@ -31,7 +32,13 @@ export function MemorialHeader({
   const birthYear = format(birthDay, "yyyy");
   const deathYear = format(deathDay, "yyyy");
 
-  const age = differenceInYears(deathDay, birthDay);
+  // Calculate age - for very young children, show days instead of years
+  const ageInYears = differenceInYears(deathDay, birthDay);
+  const ageInDays = differenceInDays(deathDay, birthDay);
+  
+  const ageText = ageInYears === 0 
+    ? `${ageInDays} ${ageInDays === 1 ? 'день' : ageInDays < 5 ? 'дня' : 'дней'} жизни`
+    : `${ageInYears} ${ageInYears === 1 ? 'год' : ageInYears < 5 ? 'года' : 'лет'} жизни`;
 
   return (
     <div
@@ -41,77 +48,85 @@ export function MemorialHeader({
         className,
       )}
     >
-      <MemorialPhoto src={photoUrl} alt={`Фото ${fullName}`} />
+      {photoUrl && (
+        <MemorialPhoto src={photoUrl} alt={`Фото ${fullName}`} />
+      )}
 
       <div className="space-y-2 w-full">
-        <h1 className="font-semibold" style={{ fontSize: "48px" }}>
+        <Typography.H1 className="font-semibold text-4xl lg:text-5xl">
           {fullName}
-        </h1>
+        </Typography.H1>
 
         <div className="flex justify-center items-baseline">
           <div className="inline-flex items-baseline">
-            <span style={{ fontSize: "20px" }}>{birthDayMonth} </span>
-            <span style={{ fontSize: "36px", marginLeft: "4px" }}>
+            <Typography.P className="text-lg lg:text-xl">{birthDayMonth} </Typography.P>
+            <Typography.H2 className="text-2xl lg:text-4xl ml-1 pb-0">
               {birthYear}
-            </span>
+            </Typography.H2>
           </div>
 
-          <span className="mx-4" style={{ fontSize: "36px" }}>
+          <Typography.H2 className="mx-4 text-2xl lg:text-4xl pb-0">
             —
-          </span>
+          </Typography.H2>
 
           <div className="inline-flex items-baseline">
-            <span style={{ fontSize: "20px" }}>{deathDayMonth} </span>
-            <span style={{ fontSize: "36px", marginLeft: "4px" }}>
+            <Typography.P className="text-lg lg:text-xl">{deathDayMonth} </Typography.P>
+            <Typography.H2 className="text-2xl lg:text-4xl ml-1 pb-0">
               {deathYear}
-            </span>
+            </Typography.H2>
           </div>
         </div>
 
-        <p className="text-muted-foreground text-lg">{age} лет жизни</p>
+        <Typography.P className="text-muted-foreground text-lg">{ageText}</Typography.P>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mt-6 w-full mx-auto">
-        <div
-          className={cn(
-            "flex flex-col flex-1 items-center",
-            "rounded-lg p-4 backdrop-blur-sm",
-            "border border-[#92C0C233]",
-            "space-y-1",
+      {(birthPlace || deathPlace) && (
+        <div className="flex flex-col md:flex-row gap-4 mt-6 w-full mx-auto">
+          {birthPlace && (
+            <div
+              className={cn(
+                "flex flex-col flex-1 items-center",
+                "rounded-lg p-4 backdrop-blur-sm",
+                "border border-[#92C0C233]",
+                "space-y-1",
+              )}
+            >
+              <div className="text-base flex items-center text-muted-foreground w-full">
+                <MapPin
+                  size={12}
+                  className="text-muted-foreground mr-2 flex-shrink-0"
+                />
+                <Typography.Small>Место рождения</Typography.Small>
+              </div>
+              <Typography.Large className="w-full text-left">
+                {birthPlace}
+              </Typography.Large>
+            </div>
           )}
-        >
-          <div className="text-base flex items-center text-muted-foreground w-full">
-            <MapPin
-              size={12}
-              className="text-muted-foreground mr-2 flex-shrink-0"
-            />
-            Место рождения
-          </div>
-          <div className="text-2xl font-medium w-full text-left">
-            {birthPlace}
-          </div>
-        </div>
 
-        <div
-          className={cn(
-            "flex flex-col flex-1 items-center",
-            "rounded-lg p-4 backdrop-blur-sm",
-            "border border-[#92C0C233]",
-            "space-y-1",
+          {deathPlace && (
+            <div
+              className={cn(
+                "flex flex-col flex-1 items-center",
+                "rounded-lg p-4 backdrop-blur-sm",
+                "border border-[#92C0C233]",
+                "space-y-1",
+              )}
+            >
+              <div className="text-base flex items-center text-muted-foreground w-full">
+                <MapPin
+                  size={12}
+                  className="text-muted-foreground mr-2 flex-shrink-0"
+                />
+                <Typography.Small>Место смерти</Typography.Small>
+              </div>
+              <Typography.Large className="w-full text-left">
+                {deathPlace}
+              </Typography.Large>
+            </div>
           )}
-        >
-          <div className="text-base flex items-center text-muted-foreground w-full">
-            <MapPin
-              size={12}
-              className="text-muted-foreground mr-2 flex-shrink-0"
-            />
-            Место смерти
-          </div>
-          <div className="text-2xl font-medium w-full text-left">
-            {deathPlace}
-          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
